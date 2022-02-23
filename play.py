@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import os
 import json
+import sqlite3
 
 
 url = input("Введите ссылку на сайт - ")
@@ -62,5 +63,22 @@ if oneBlock or twoBlock:
     with open(f"data/{webName}.json", "a", encoding="utf-8-sig") as file:
         json.dump(cardItem, file, indent=4, ensure_ascii=False)
 
+
+# db = sqlite3.connect("citilink.db")
+# sql = db.cursor()
+
+# sql.execute("""CREATE TABLE IF NOT EXISTS citilink (
+#     name TEXT,
+#     price INT,
+#     href TEXT
+# )""")
+
+# db.commit()
+# sql.execute("SELECT name FROM citilink")
+# if sql.fetchone() is None:
+#     sql.execute("INSERT INTO citilink VALUES (:title, :price, :href)", (webName))
+#     db.commit()
+# else:
+#     print("Error SQL")
 
 os.remove("index.html")
