@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 import os
 import json
-import sqlite3
 
 
 url = input("Введите ссылку на сайт - ")
@@ -12,24 +11,31 @@ headers = {
 }
 url_link = "https://www.citilink.ru"
 
+
 req = requests.get(url, headers=headers)
 src = req.text
+
 
 if not os.path.isdir("data"):
     os.mkdir("data")
 
-with open("index.html", "w", encoding="utf-8-sig") as file:
-    file.write(src)
+# with open("index.html", "w", encoding="utf-8-sig") as file:
+#     file.write(src)
 
-with open("index.html", encoding="utf-8-sig") as file:
-    src = file.read()
+
+# with open("index.html", encoding="utf-8-sig") as file:
+#     src = file.read()
+
 
 soup = BeautifulSoup(src, "lxml")
+
 
 oneBlock = soup.find("div", class_="ProductCardCategoryList__list")
 twoBlock = soup.find_all("div", class_="ProductCardCategoryList__grid")
 
+
 cardItem = []
+href = []
 if oneBlock:
     itemInfoList = soup.find_all("div", class_="product_data__gtm-js")
     for item in itemInfoList:
@@ -38,6 +44,11 @@ if oneBlock:
             {
                 "title": item.find("a", class_="ProductCardHorizontal__title").get_text(strip=True),
                 "price": item.find("span", class_="ProductCardHorizontal__price_current-price").get_text(strip=True) + " руб.",
+                "href": url_link + item.find("a", class_="ProductCardHorizontal__title").get("href")
+            }
+        )
+        href.append(
+            {
                 "href": url_link + item.find("a", class_="ProductCardHorizontal__title").get("href")
             }
         )
@@ -52,33 +63,41 @@ elif twoBlock:
                 "href": url_link + item.find("a", class_="ProductCardVertical__name").get("href")
             }
         )
+        href.append(
+            {
+                "href": url_link + item.find("a", class_="ProductCardHorizontal__title").get("href")
+            }
+        )
 else:
     print("Error")
+
 
 rep = " "
 if oneBlock or twoBlock:
     if rep in webName:
         webName = webName.replace(rep, "_")
+    
+    # os.makedirs("data/" + webName)
+    if not os.path.isdir("data/" + webName):
+        os.makedirs("data/" + webName)
 
-    with open(f"data/{webName}.json", "a", encoding="utf-8-sig") as file:
+    with open(f"data/{webName}/{webName}.json", "a", encoding="utf-8-sig") as file:
         json.dump(cardItem, file, indent=4, ensure_ascii=False)
+    
+    with open(f"data/{webName}/test.json", "a", encoding="utf-8-sig") as file:
+        json.dump(href, file, indent=4, ensure_ascii=False)
 
 
-# db = sqlite3.connect("citilink.db")
-# sql = db.cursor()
+with open(f"data/{webName}/test.json", encoding="utf-8-sig") as file:
+    all_item = json.load(file)
 
-# sql.execute("""CREATE TABLE IF NOT EXISTS citilink (
-#     name TEXT,
-#     price INT,
-#     href TEXT
-# )""")
+for nameHref, itemHref in all_item.items():
+    reqt = requests.get(itemHref, headers=headers)
+    srct = reqt.text
+    
+    soupt = BeautifulSoup(srct, "lxml")
+    # Парсинг страницы
+    itemName = soupt.find("h1", class_="Heading Heading_level_1 ProductHeader__title").get_text(strip=True)
 
-# db.commit()
-# sql.execute("SELECT name FROM citilink")
-# if sql.fetchone() is None:
-#     sql.execute("INSERT INTO citilink VALUES (:title, :price, :href)", (webName))
-#     db.commit()
-# else:
-#     print("Error SQL")
 
-os.remove("index.html")
+# os.remove("index.html")
